@@ -1,17 +1,9 @@
-import itertools
 import os
-import random
 import time
-import traceback
 
 # Read an image and convert it to the HSV color space, using OpenCV .
 import cv2
-import libsvm.commonutil
-import libsvm.svm
-import libsvm.svmutil
 import numpy as np
-from PIL import Image
-from libsvm import svmutil
 # Import label encoder
 from sklearn import preprocessing
 
