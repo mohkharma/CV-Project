@@ -1,6 +1,9 @@
 # Generate the training model by:
 # libsvm\windows> .\svm-train.exe -t 1 C:\M.kharma_data\PhD\03-Semester-2022\COMP9318-ML\bk\test1672427916
-from python.libsvm import svmutil, svm
+import os
+import sys
+
+from libsvm.python.libsvm import svmutil, svm
 # Import label encoder
 from sklearn.metrics import f1_score, confusion_matrix, classification_report
 
