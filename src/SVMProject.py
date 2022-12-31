@@ -1,0 +1,250 @@
+import itertools
+import os
+import random
+import time
+import traceback
+
+# Read an image and convert it to the HSV color space, using OpenCV .
+import cv2
+import libsvm.commonutil
+import libsvm.svm
+import libsvm.svmutil
+import numpy as np
+from PIL import Image
+from libsvm import svmutil
+# Import label encoder
+from sklearn import preprocessing
+
+# Image data constants
+DIMENSION = 32
+DIMENSIONS = (DIMENSION, DIMENSION)
+ROOT_DIR = "../../project1data/test/"
+ROOT_DIR2 = "../../project1data/"
+DEER = "deer"
+FROG = "frog"
+AIRPLANE = "airplane"
+AUTOMOBILE = "automobile"
+BIRD = "bird"
+HORSE = "horse"
+TRUCK = "truck"
+CLASSES = [DEER, FROG, AIRPLANE, AUTOMOBILE, BIRD, HORSE, TRUCK]
+DATASETTYPE = ["test", "train"]
+
+# libsvm constants
+LINEAR = 0
+RBF = 2
+
+# Other
+USE_LINEAR = True
+IS_TUNING = False
+
+
+def main():
+    try:
+        train, tune, test = getData(IS_TUNING)
+        models = getModels(train)
+        results = None
+        if IS_TUNING:
+            print("!!! TUNING MODE !!!")
+            results = classify(models, tune)
+        else:
+            results = classify(models, test)
+
+        print()
+        totalCount = 0
+        totalCorrect = 0
+        for clazz in CLASSES:
+            count, correct = results[clazz]
+            totalCount += count
+            totalCorrect += correct
+            print("%s %d %d %f" % (clazz, correct, count, (float(correct) / count)))
+        print("%s %d %d %f" % ("Overall", totalCorrect, totalCount, (float(totalCorrect) / totalCount)))
+
+    except:
+        # print(e)
+        traceback.print_exc()
+        return 5
+
+
+def classify(models, dataSet):
+    results = {}
+    for trueClazz in CLASSES:
+        count = 0
+        correct = 0
+        for item in dataSet[trueClazz]:
+            predClazz, prob = predict(models, item)
+            print("%s,%s,%f" % (trueClazz, predClazz, prob))
+            count += 1
+            if trueClazz == predClazz: correct += 1
+        results[trueClazz] = (count, correct)
+    return results
+
+
+def predict(models, item):
+    maxProb = 0.0
+    bestClass = ""
+    for clazz, model in models.items():
+        prob = predictSingle(model, item)
+        if prob > maxProb:
+            maxProb = prob
+            bestClass = clazz
+    return (bestClass, maxProb)
+
+
+def predictSingle(model, item):
+    output = libsvm.svmutil.svm_predict([0], [item], model, "-q -b 1")
+    prob = output[2][0][0]
+    return prob
+
+
+def getModels(trainingData):
+    models = {}
+    param = getParam(USE_LINEAR)
+    for c in CLASSES:
+        labels, data = getTrainingData(trainingData, c)
+        prob = libsvm.svm.svm_problem(labels, data)
+        m = libsvm.svmutil.svm_train(prob, param)
+        models[c] = m
+    return models
+
+
+def getTrainingData(trainingData, clazz):
+    labeledData = getLabeledDataVector(trainingData, clazz, 1)
+    negClasses = [c for c in CLASSES if not c == clazz]
+    for c in negClasses:
+        ld = getLabeledDataVector(trainingData, c, -1)
+        labeledData += ld
+    random.shuffle(labeledData)
+    unzipped = [list(t) for t in zip(*labeledData)]
+    # labels, data = unzipped[0], unzipped[1]
+    labels, data = unzipped or ([], [])
+    return (labels, data)
+
+
+def getParam(linear=True):
+    param = libsvm.svm.svm_parameter("-q")
+    param.probability = 1
+    if (linear):
+        param.kernel_type = LINEAR
+        param.C = .01
+    else:
+        param.kernel_type = RBF
+        param.C = .01
+        param.gamma = .00000001
+    return param
+
+
+def getLabeledDataVector(dataset, clazz, label):
+    data = dataset[clazz]
+    labels = [label] * len(data)
+    output = zip(labels, data)
+    return list(output)
+
+
+def getData(generateTuningData):
+    trainingData = {}
+    tuneData = {}
+    testData = {}
+
+    for clazz in CLASSES:
+        (train, tune, test) = buildTrainTestVectors(buildImageList(ROOT_DIR + clazz + "/"), generateTuningData)
+        trainingData[clazz] = train
+        tuneData[clazz] = tune
+        testData[clazz] = test
+
+    return (trainingData, tuneData, testData)
+
+
+def buildImageList(dirName):
+    imgs = [Image.open(dirName + fileName).resize((DIMENSION, DIMENSION)) for fileName in os.listdir(dirName)]
+    imgs = [list(itertools.chain.from_iterable(img.getdata())) for img in imgs]
+    return imgs
+
+
+def buildTrainTestVectors(imgs, generateTuningData):
+    # 70% for training, 30% for test.
+    testSplit = int(.7 * len(imgs))
+    baseTraining = imgs[:testSplit]
+    test = imgs[testSplit:]
+
+    training = None
+    tuning = None
+    if generateTuningData:
+        # 50% of training for true training, 50% for tuning.
+        tuneSplit = int(.5 * len(baseTraining))
+        training = baseTraining[:tuneSplit]
+        tuning = baseTraining[tuneSplit:]
+    else:
+        training = baseTraining
+
+    return (training, tuning, test)
+
+
+def covertImageToFlattenHSV(dirName, fileName):
+    # https://techtutorialsx.com/2019/11/08/python-opencv-converting-image-to-hsv/
+    image = cv2.imread(dirName + fileName)
+    # https://www.tutorialkart.com/opencv/python/opencv-python-resize-image/
+    image = cv2.resize(image, DIMENSIONS, interpolation=cv2.INTER_LINEAR)
+    hsvImage = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+    #  converting and m x n matrix in a array of values.
+    flattenImage = hsvImage.flatten()
+
+    # cv2.imshow('Original image',image)
+    # cv2.imshow('HSV image', hsvImage)
+    #
+    # cv2.waitKey(0)
+    # cv2.destroyAllWindows()
+    return flattenImage
+
+
+def generateImagesMatrix(dsType):
+    Xdata = []
+    Ydata = []
+    for clazz in CLASSES:
+        for fileName in os.listdir(ROOT_DIR2 + dsType + "/" + clazz + "/"):
+            flattenImage = covertImageToFlattenHSV(ROOT_DIR2 + dsType + "/"+ clazz + "/", fileName)
+            Xdata.append(flattenImage)
+            Ydata.append(clazz)
+    Xdata = np.array(Xdata)
+    # print(Xdata)
+    # print("---------------------")
+    Ydata = np.array(Ydata)
+    # print(Ydata)
+    # https://www.geeksforgeeks.org/ml-label-encoding-of-datasets-in-python/
+    # label_encoder object knows how to understand word labels.
+    label_encoder = preprocessing.LabelEncoder()
+    # Encode labels in column 'species'.
+    Ydata = label_encoder.fit_transform(Ydata)
+    return Xdata, Ydata
+
+
+#       Ydata --> Labels
+#       Xdata --> Images data
+def generateFeaturesFiles(dataSetType, Xdata, Ydata):
+    line = ""
+    counter1 = 0
+    counter2 = 1
+    time1 = int(time.time())
+    print(f"The current time in milliseconds: {time1}")
+    df = open(ROOT_DIR2 + dataSetType + str(time1), 'w')
+    for idx in Xdata:
+        df.write(str(Ydata[counter1]))
+        # print ("str(Ydata[idx]) " + str(Ydata[idx]))
+        for idx2 in idx:
+            df.write(' ' + str(counter2) + ':' + str(idx2))
+            counter2 = counter2 + 1
+        df.write('\n')
+        counter1 = counter1 + 1
+        counter2 = 1
+        line = ""
+    print(f"The current time in milliseconds: {int(time.time()) - time1}")
+
+
+if __name__ == "__main__":
+    # sys.exit(main())
+    # main()
+    for dsType in DATASETTYPE:
+        (Xdata, Ydata) = generateImagesMatrix(dsType)
+        generateFeaturesFiles(dsType, Xdata, Ydata)
+
+    # print(Ydata)
