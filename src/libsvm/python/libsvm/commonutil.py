@@ -34,29 +34,49 @@ def svm_read_problem(data_file_name, return_scipy=False):
         col_idx = []
     indx_start = 1
     for i, line in enumerate(open(data_file_name)):
-        line = line.split(None, 1)
-        # In case an instance with all zero features
-        if len(line) == 1: line += ['']
-        label, features = line
-        prob_y.append(float(label))
-        if scipy != None and return_scipy:
-            nz = 0
-            for e in features.split():
-                ind, val = e.split(":")
-                if ind == '0':
-                    indx_start = 0
-                val = float(val)
-                if val != 0:
-                    col_idx.append(int(ind)-indx_start)
-                    prob_x.append(val)
-                    nz += 1
-            row_ptr.append(row_ptr[-1]+nz)
-        else:
-            xi = {}
-            for e in features.split():
-                ind, val = e.split(":")
-                xi[int(ind)] = float(val)
-            prob_x += [xi]
+        try:
+            # print( line)
+            line = line.split(None, 1)
+            # print(str(i))
+
+            # print(line)
+            # In case an instance with all zero features
+            if len(line) == 1: line += ['']
+            label, features = line
+            # print(label   )
+            # print(features   )
+            # try:
+            prob_y.append(float(label))
+            # except:
+            #     print("An exception occurred", line)
+            #     print("An exception occurred", label)
+
+            if scipy != None and return_scipy:
+                nz = 0
+                for e in features.split():
+                    ind, val = e.split(":")
+                    if ind == '0':
+                        indx_start = 0
+                    val = float(val)
+                    if val != 0:
+                        col_idx.append(int(ind)-indx_start)
+                        prob_x.append(val)
+                        nz += 1
+                row_ptr.append(row_ptr[-1]+nz)
+            else:
+                xi = {}
+                for e in features.split():
+                    ind, val = e.split(":")
+                    xi[int(ind)] = float(val)
+                prob_x += [xi]
+            # print("Success-----")
+        except:
+            print("An exception occurred")
+
+
+
+
+
     if scipy != None and return_scipy:
         prob_y = np.frombuffer(prob_y, dtype='d')
         prob_x = np.frombuffer(prob_x, dtype='d')
