@@ -8,6 +8,8 @@ import numpy as np
 from sklearn import preprocessing
 
 # Image data constants
+from sklearn.preprocessing import StandardScaler
+
 DIMENSION = 32
 DIMENSIONS = (DIMENSION, DIMENSION)
 # ROOT_DIR = "../data/test/"
@@ -32,26 +34,36 @@ def covertImageToFlattenHSV(dirName, fileName):
     # Convert the image from RGB color space to HSV color space.
     hsvImage = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
     # converting the HSV m x n matrix into a array of values.
-    flattenImage = hsvImage.flatten()
+    # flattenImage = hsvImage.flatten()
 
     # cv2.imshow('Original image',image)
     # cv2.imshow('HSV image', hsvImage)
     #
     # cv2.waitKey(0)
     # cv2.destroyAllWindows()
-    return flattenImage
+    return hsvImage
 
 
 def generateImagesMatrix(dsType):
     Xdata = []
     Ydata = []
+    histogramData=[]
     #Iterate over the included training and testing dataset images and create the image in the memory.
     for clazz in CLASSES:
         for fileName in os.listdir(ROOT_DIR2 + dsType + "/" + clazz + "/"):
-
+            histogramData=[]
             flattenImage = covertImageToFlattenHSV(ROOT_DIR2 + dsType + "/"+ clazz + "/", fileName)
-            Xdata.append(flattenImage)
+            h1Blue = cv2.calcHist([flattenImage], [0], None, [16], [0, 256]).ravel()
+            h2Green = cv2.calcHist([flattenImage], [1], None, [16], [0, 256]).ravel()
+            h3Red = cv2.calcHist([flattenImage], [2], None, [16], [0, 256]).ravel()
+            # Flatten using extending list by appending elements for each channel
+            histogramData.extend(h1Blue)
+            histogramData.extend(h2Green)
+            histogramData.extend(h3Red)
+
+            Xdata.append(histogramData)
             Ydata.append(clazz)
+
     Xdata = np.array(Xdata)
     # print(Xdata)
     # print("---------------------")
@@ -89,4 +101,6 @@ if __name__ == "__main__":
     #Iterate over the included training and testing dataset images and create the image in the memory.
     for dsType in DATASETTYPE:
         (Xdata, Ydata) = generateImagesMatrix(dsType)
+        # Normalization/scaling
+        Xdata=StandardScaler().fit_transform(Xdata)
         generateFeaturesFiles(dsType, Xdata, Ydata)

@@ -1,5 +1,5 @@
 # Generate the training model by:
-# libsvm\windows> .\svm-train.exe -t 1 C:\M.kharma_data\PhD\03-Semester-2022\COMP9318-ML\bk\test1672427916
+# libsvm/windows> ./svm-train.exe -t 1 C:/M.kharma_data/PhD/03-Semester-2022/COMP9318-ML/bk/test1672427916
 import os
 import sys
 import random
@@ -15,7 +15,7 @@ BIRD = "bird"
 HORSE = "horse"
 TRUCK = "truck"
 CLASSES = [DEER, FROG, AIRPLANE, AUTOMOBILE, BIRD, HORSE, TRUCK]
-model = svmutil.svm_load_model("../../bk/test1672427916_5.model")
+model = svmutil.svm_load_model("../../project1data/train1672696618_1.model")
 
 rand_list=[]
 y_test2 = []
@@ -24,27 +24,28 @@ for i in range(0,200):
     n=random.randint(0,4999)
     rand_list.append(n)
 
-y_test, x_test = svmutil.svm_read_problem("C:/M.kharma_data/PhD/03-Semester-2022/COMP9318-ML/bk/train1672428003")
+y_test, x_test = svmutil.svm_read_problem("C:/M.kharma_data/PhD/03-Semester-2022/COMP9318-ML/project1data/test1672696575")
 print ("xxxxxxxxxxx" )
 
-for i in rand_list:
-    x_test2.append(x_test[i])
-    y_test2.append(y_test[i])
-    x_test2.append(x_test[i + (5000 * 1)] )
-    y_test2.append(y_test[i+ (5000 * 1)] )
-    x_test2.append(x_test[i + (5000 * 2)] )
-    y_test2.append(y_test[i+ (5000 * 2) ])
-    x_test2.append(x_test[i + (5000 * 3)] )
-    y_test2.append(y_test[i+ (5000 * 3)] )
-    x_test2.append(x_test[i + (5000 * 4)] )
-    y_test2.append(y_test[i+ (5000 * 4)] )
-    x_test2.append(x_test[i + (5000 * 5)] )
-    y_test2.append(y_test[i+ (5000 * 5)] )
-    x_test2.append(x_test[i + (5000 * 6)] )
-    y_test2.append(y_test[i+ (5000 * 6)] )
+if False:
+    for i in rand_list:
+        x_test2.append(x_test[i])
+        y_test2.append(y_test[i])
+        x_test2.append(x_test[i + (5000 * 1)] )
+        y_test2.append(y_test[i+ (5000 * 1)] )
+        x_test2.append(x_test[i + (5000 * 2)] )
+        y_test2.append(y_test[i+ (5000 * 2) ])
+        x_test2.append(x_test[i + (5000 * 3)] )
+        y_test2.append(y_test[i+ (5000 * 3)] )
+        x_test2.append(x_test[i + (5000 * 4)] )
+        y_test2.append(y_test[i+ (5000 * 4)] )
+        x_test2.append(x_test[i + (5000 * 5)] )
+        y_test2.append(y_test[i+ (5000 * 5)] )
+        x_test2.append(x_test[i + (5000 * 6)] )
+        y_test2.append(y_test[i+ (5000 * 6)] )
 
-x_test = x_test2
-y_test = y_test2
+    x_test = x_test2
+    y_test = y_test2
 print ("xxxxxxxxxxx")
 
 
