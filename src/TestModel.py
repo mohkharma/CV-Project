@@ -15,7 +15,7 @@ BIRD = "bird"
 HORSE = "horse"
 TRUCK = "truck"
 CLASSES = [DEER, FROG, AIRPLANE, AUTOMOBILE, BIRD, HORSE, TRUCK]
-model = svmutil.svm_load_model("../../project1data/train1672696618_1.model")
+model = svmutil.svm_load_model("../../project1data/train1672696618_11.model")
 
 rand_list=[]
 y_test2 = []

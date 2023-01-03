@@ -228,6 +228,7 @@ private:
 	const double coef0;
 
 	static double dot(const svm_node *px, const svm_node *py);
+	//mkharma: Add new function signature for computing the CHI
 	static double chi2distNorm(const svm_node* px, const svm_node* py);
 	double kernel_linear(int i, int j) const
 	{
@@ -249,6 +250,7 @@ private:
 	{
 		return x[i][(int)(x[j][0].value)].value;
 	}
+	//mkharma: Add new function signature for computing the CHI
 	double kernel_chi_squared_norm(int i, int j) const
 	{
 		return chi2distNorm(x[i], x[j]);
@@ -276,6 +278,7 @@ Kernel::Kernel(int l, svm_node * const * x_, const svm_parameter& param)
 		case PRECOMPUTED:
 			kernel_function = &Kernel::kernel_precomputed;
 			break;
+		//mkharma: Add support for the new CHI2 kernel
 		case CHISQUAREDNORM:
 			kernel_function = &Kernel::kernel_chi_squared_norm;
 			break;
@@ -321,7 +324,7 @@ double Kernel::dot(const svm_node *px, const svm_node *py)
 	return sum;
 }
 
-
+//mkharma: Add new function signature for computing the CHI
 double Kernel::chi2distNorm(const svm_node* px, const svm_node* py)
 {
 	double sum = 0;
